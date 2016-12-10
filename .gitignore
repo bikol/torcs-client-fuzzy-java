@@ -7,3 +7,6 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
+/lib/net/sourceforge/jfuzzylogic/jfuzzylogic/3.3/_remote.repositories
+/lib/net/sourceforge/jfuzzylogic/jfuzzylogic/3.3/jfuzzylogic-3.3.jar.lastUpdated
+/lib/net/sourceforge/jfuzzylogic/jfuzzylogic/3.3/jfuzzylogic-3.3.pom.lastUpdated
