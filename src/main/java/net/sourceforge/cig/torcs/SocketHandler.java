@@ -1,7 +1,9 @@
-/**
- * 
- */
-package pl.edu.amu.wmi.min.torcs.fcl;
+/*
+* This class is a part Computational Intelligence in Games project 
+* https://sourceforge.net/projects/cig/    
+* and is licensed under GPLv2
+*/
+package net.sourceforge.cig.torcs;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

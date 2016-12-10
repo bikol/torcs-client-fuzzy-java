@@ -1,4 +1,9 @@
-package pl.edu.amu.wmi.min.torcs.fcl;
+/*
+* This class is a part Computational Intelligence in Games project 
+* https://sourceforge.net/projects/cig/    
+* and is licensed under GPLv2
+*/
+package net.sourceforge.cig.torcs;
 
 public abstract class Controller {
 
@@ -6,7 +11,7 @@ public abstract class Controller {
 		
 		WARMUP,QUALIFYING,RACE,UNKNOWN;
 		
-		static Stage fromInt(int value)
+		static public Stage fromInt(int value)
 		{
 			switch (value) {
 			case 0:
