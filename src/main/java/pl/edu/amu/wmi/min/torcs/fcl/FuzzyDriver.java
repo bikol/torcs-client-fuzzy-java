@@ -27,36 +27,38 @@ import net.sourceforge.jFuzzyLogic.rule.Variable;
 
 /**
  *
- * @author Patryk Żywica <bikol@amu.edu.pl> 
+ * @author Patryk Żywica <bikol@amu.edu.pl>
  */
 public class FuzzyDriver extends Controller {
-
+    
     private final FIS fis;
     private final float[] angles;
-
+    /* Gear Changing Constants*/
+    private final int[] gearUp = {5000, 6000, 6000, 6500, 7000, 0};
+    private final int[] gearDown = {0, 2500, 3000, 3000, 3500, 3500};
+    
     public FuzzyDriver(FIS fis) {
         this.fis = fis;
-
+        
         this.angles = new float[19];
         /* set angles as {-90,-75,-60,-45,-30,-20,-15,-10,-5,0,5,10,15,20,30,45,60,75,90} */
         for (int i = 0; i < 5; i++) {
             angles[i] = -90 + i * 15;
             angles[18 - i] = 90 - i * 15;
         }
-
+        
         for (int i = 5; i < 9; i++) {
             angles[i] = -20 + (i - 5) * 5;
             angles[18 - i] = 20 - (i - 5) * 5;
         }
         angles[9] = 0;
     }
-
+    
     @Override
     public Action control(SensorModel sensors) {
         Action toReturn = new Action();
 
         // Set the input
-        
         // Track [0,200] (m)
         // Vector of 19 range finder sensors: each sensors returns the
         // distance between the track edge and the car within a range
@@ -73,10 +75,10 @@ public class FuzzyDriver extends Controller {
         // than 1), the returned values are not reliable (typically -1 is
         // returned).
         double[] trackEdge = sensors.getTrackEdgeSensors();
-        for(int i=0;i<angles.length;i++){
-            fis.setVariable("track_"+i, trackEdge[i]);
+        for (int i = 0; i < angles.length; i++) {
+            fis.setVariable("track" + i, trackEdge[i]);
         }
-                
+
         // Track pos (−∞,+∞)
         // Distance between the car and the track axis. The value is
         // normalized w.r.t to the track width: it is 0 when car is on
@@ -85,11 +87,11 @@ public class FuzzyDriver extends Controller {
         // than 1 or smaller than -1 mean that the car is outside of
         // the track.
         fis.setVariable("trackPos", sensors.getTrackPosition());
-        
+
         // Speed (x) (−∞,+∞) (km/h) 
         // Speed of the car along the longitudinal axis of the car.
         fis.setVariable("speed", sensors.getSpeed());
-        
+
         // Opponents [0,200] (m)
         // Vector of 36 opponent sensors: each sensor covers a span
         // of 10 degrees within a range of 200 meters and returns the
@@ -100,8 +102,8 @@ public class FuzzyDriver extends Controller {
         // around the car, spanning clockwise from -180 degrees up to
         // +180 degrees with respect to the car axis.
         double[] opponents = sensors.getOpponentSensors();
-        for(int i=0;i<opponents.length;i++){
-            fis.setVariable("opponent_"+i, opponents[i]);
+        for (int i = 0; i < opponents.length; i++) {
+            fis.setVariable("opponent" + i, opponents[i]);
         }
 
         // angle [-π,+π] (rad) 
@@ -112,7 +114,6 @@ public class FuzzyDriver extends Controller {
         fis.evaluate();
 
         // set the output
-        
         // Steering value: -1 and +1 means respectively full right and
         // left, that corresponds to an angle of 0.366519 rad. Range [-1,1]
         Variable steering = fis.getVariable("steering");
@@ -120,28 +121,51 @@ public class FuzzyDriver extends Controller {
         Variable accelerate = fis.getVariable("accelerate");
         // Virtual brake pedal (0 means no brake, 1 full brake). Range [0,1]
         Variable brake = fis.getVariable("brake");
-
+        
         toReturn.steering = steering.getValue();
         toReturn.accelerate = accelerate.getValue();
         toReturn.brake = brake.getValue();
-
+        toReturn.gear = getGear(sensors);
+        
         return toReturn;
     }
-
+    
     @Override
     public void reset() {
         System.out.println("Restarting the race!");
-
+        
     }
-
+    
     @Override
     public void shutdown() {
         System.out.println("Bye bye!");
     }
-
+    
     @Override
     public float[] initAngles() {
         return angles;
     }
+    
+    private int getGear(SensorModel sensors) {
+        int gear = sensors.getGear();
+        double rpm = sensors.getRPM();
 
+        // if gear is 0 (N) or -1 (R) just return 1 
+        if (gear < 1) {
+            return 1;
+        }
+        // check if the RPM value of car is greater than the one suggested 
+        // to shift up the gear from the current one     
+        if (gear < 6 && rpm >= gearUp[gear - 1]) {
+            return gear + 1;
+        } else // check if the RPM value of car is lower than the one suggested 
+        // to shift down the gear from the current one
+        if (gear > 1 && rpm <= gearDown[gear - 1]) {
+            return gear - 1;
+        } else // otherwhise keep current gear
+        {
+            return gear;
+        }
+    }
+    
 }
